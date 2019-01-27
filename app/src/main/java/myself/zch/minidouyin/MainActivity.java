@@ -1,7 +1,11 @@
 package myself.zch.minidouyin;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -28,6 +32,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "DEBUG_MAIN_ACTIVITY";
+    private static final int VID_REQUESTS = 1;
+    private static final int LOC_REQUESTS = 101;
+
 
     private RecyclerView recyclerView;
     private List<Feed> mFeeds = new ArrayList<>();
@@ -39,29 +46,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initRecyclerView();
-
-        //收藏
-        findViewById(R.id.btn_favorite_main).setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, ShowFavoriteActivity.class);
-            startActivity(intent);
-        });
-
-        //拍摄
-        findViewById(R.id.btn_record_main).setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, RecordActivity.class);
-            startActivity(intent);
-        });
-
-        //发布
-        findViewById(R.id.btn_post_main).setOnClickListener(v -> {
-            // TODO: 2019/1/26 直接弹出对话框，准备发布
-        });
-
-        //刷新
-//        btn_refresh.setOnClickListener(v -> {
-//            fetchFeed();
-//        });
-
+        initButtons();
+        initLocate();
         fetchFeed();
     }
 
@@ -102,6 +88,75 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void initButtons(){
+        //收藏
+        findViewById(R.id.btn_favorite_main).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, ShowFavoriteActivity.class);
+            startActivity(intent);
+        });
+
+        //拍摄
+        findViewById(R.id.btn_record_main).setOnClickListener(v -> {
+            //申请权限
+            if (ContextCompat.checkSelfPermission(MainActivity.this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                    || ContextCompat.checkSelfPermission(MainActivity.this,
+                    Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
+                    || ContextCompat.checkSelfPermission(MainActivity.this,
+                    Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                Manifest.permission.CAMERA,
+                                Manifest.permission.RECORD_AUDIO},
+                        VID_REQUESTS);
+            } else {
+                Intent intent = new Intent(MainActivity.this, RecordActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        //发布
+        findViewById(R.id.btn_post_main).setOnClickListener(v -> {
+            // TODO: 2019/1/26 直接弹出对话框，准备发布
+        });
+
+        //刷新
+//        btn_refresh.setOnClickListener(v -> {
+//            fetchFeed();
+//        });
+    }
+
+    // TODO: 2019/1/27 初始化定位
+    private void initLocate(){
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case VID_REQUESTS: {
+                int num = grantResults.length;
+                boolean gotPermission = true;
+                for (int i = 0; i < num; i++) {
+                    if (grantResults.length > 0 && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    } else {
+                        gotPermission = false;
+                        Toast.makeText(this, "You denied the necessary permission", Toast.LENGTH_SHORT).show();
+                        break;
+                    }
+                }
+                if (gotPermission) {
+                    Intent intent = new Intent(MainActivity.this, RecordActivity.class);
+                    startActivity(intent);
+                }
+                break;
+            }
+            case LOC_REQUESTS:{
+                // TODO: 2019/1/27 定位权限处理
+            }
+        }
+    }
+
     public static class MyViewHolder extends RecyclerView.ViewHolder {
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -118,7 +173,6 @@ public class MainActivity extends AppCompatActivity {
                 enqueue(callback);
     }
 
-
     private void fetchFeed() {
 //        btnRefreshDisable();
 
@@ -133,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<FeedResponse> call, Throwable t) {
-                Toast.makeText(MainActivity.this.getApplicationContext(), "FAILED TO REQUEST", Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this.getApplicationContext(), "FAILED TO REQUEST" + t.getMessage(), Toast.LENGTH_LONG).show();
                 Log.d(TAG, "onFailure: " + t.getMessage());
 //                btnRefreshEnable();
             }
