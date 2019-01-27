@@ -1,53 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
     <SurfaceView
         android:id="@+id/sv_play"
-        android:layout_width="240dp"
-        android:layout_height="426dp"
-        android:layout_gravity="center" />
-
-    <SeekBar
-        android:id="@+id/seekbar_play"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        />
+        android:layout_height="match_parent"
+        android:layout_gravity="center" />
 
 
     <LinearLayout
-        android:id="@+id/controller_play"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:orientation="horizontal">
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="11dp"
+        android:orientation="vertical">
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:onClick="start"
-            android:text="播放" />
+        <SeekBar
+            android:id="@+id/seekbar_play"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="40sp"
+            android:layout_marginRight="40sp"
+            android:layout_marginBottom="8dp" />
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:onClick="pause"
-            android:text="暂停" />
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:onClick="stop"
-            android:text="停止" />
+        <LinearLayout
+            android:id="@+id/controller_play"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:onClick="restart"
-            android:text="重播" />
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:onClick="start"
+                android:text="播放"
+                android:textColor="#f2f2f2"
+                android:textSize="20dp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:onClick="pause"
+                android:text="暂停"
+                android:textColor="#f2f2f2"
+                android:textSize="20dp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:onClick="stop"
+                android:text="停止"
+                android:textColor="#f2f2f2"
+                android:textSize="20dp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:onClick="restart"
+                android:text="重播"
+                android:textColor="#f2f2f2"
+                android:textSize="20dp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -59,4 +90,4 @@
         tools:text="test content" />
 
 
-</LinearLayout>
+</RelativeLayout>
