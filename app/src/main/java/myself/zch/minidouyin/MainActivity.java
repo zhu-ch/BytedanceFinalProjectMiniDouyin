@@ -29,13 +29,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "DEBUG_MAIN_ACTIVITY";
 
-    private Button btn_record;
-    private Button btn_favorite;
-    private Button btn_post;
     private RecyclerView recyclerView;
     private List<Feed> mFeeds = new ArrayList<>();
-    // TODO: 2019/1/26 refresh按钮？
-    private Button btn_refresh;
+    // TODO: 2019/1/27 刷新
+//    private Button btn_refresh = findViewById(R.id.btn_refresh);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,47 +40,26 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initRecyclerView();
 
-        btn_record = findViewById(R.id.btn_record_main);
-        btn_favorite = findViewById(R.id.btn_favorite_main);
-        btn_post = findViewById(R.id.btn_post_main);
-//        btn_refresh = findViewById(R.id.btn_refresh);
-
-        btn_favorite.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, ShowFavoriteActivity.class);
-                startActivity(intent);
-            }
+        //收藏
+        findViewById(R.id.btn_favorite_main).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, ShowFavoriteActivity.class);
+            startActivity(intent);
         });
 
-        btn_favorite.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, ShowFavoriteActivity.class);
-                startActivity(intent);
-            }
+        //拍摄
+        findViewById(R.id.btn_record_main).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, RecordActivity.class);
+            startActivity(intent);
         });
 
-        btn_record.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, RecordActivity.class);
-                startActivity(intent);
-            }
+        //发布
+        findViewById(R.id.btn_post_main).setOnClickListener(v -> {
+            // TODO: 2019/1/26 直接弹出对话框，准备发布
         });
 
-        btn_post.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // TODO: 2019/1/26 直接弹出对话框，准备发布
-            }
-        });
-
-//        btn_refresh.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                fetchFeed();
-//            }
+        //刷新
+//        btn_refresh.setOnClickListener(v -> {
+//            fetchFeed();
 //        });
 
         fetchFeed();
@@ -108,19 +84,15 @@ public class MainActivity extends AppCompatActivity {
 
                 String url = mFeeds.get(i).getImage_url();
                 Glide.with(iv.getContext()).load(url).into(iv);
+                viewHolder.itemView.setOnClickListener((v -> {
+                    Intent intent = new Intent(MainActivity.this, PlayActivity.class);
+                    intent.putExtra("VIDEO_URL", mFeeds.get(i).getVideo_url());
+                    intent.putExtra("IMAGE_URL", mFeeds.get(i).getImage_url());
+                    intent.putExtra("STUDENT_ID", mFeeds.get(i).getStudent_id());
+                    intent.putExtra("USER_NAME", mFeeds.get(i).getUser_name());
 
-                viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        Intent intent = new Intent(MainActivity.this, PlayActivity.class);
-                        intent.putExtra("VIDEO_URL", mFeeds.get(i).getVideo_url());
-                        intent.putExtra("IMAGE_URL", mFeeds.get(i).getImage_url());
-                        intent.putExtra("STUDENT_ID", mFeeds.get(i).getStudent_id());
-                        intent.putExtra("USER_NAME", mFeeds.get(i).getUser_name());
-
-                        startActivity(intent);
-                    }
-                });
+                    startActivity(intent);
+                }));
             }
 
             @Override
