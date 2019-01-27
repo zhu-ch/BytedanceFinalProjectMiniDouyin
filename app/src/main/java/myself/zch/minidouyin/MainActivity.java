@@ -13,8 +13,8 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -32,19 +32,19 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "DEBUG_MAIN_ACTIVITY";
-    private static final int VID_REQUESTS = 1;
-    private static final int LOC_REQUESTS = 101;
+    private static final int VIDEO_REQUESTS = 1;
+    private static final int LOCATION_REQUESTS = 101;
 
 
     private RecyclerView recyclerView;
     private List<Feed> mFeeds = new ArrayList<>();
-    // TODO: 2019/1/27 刷新
-//    private Button btn_refresh = findViewById(R.id.btn_refresh);
+    TextView textView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        textView = findViewById(R.id.btn_refresh);
         initRecyclerView();
         initButtons();
         initLocate();
@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void initButtons(){
+    private void initButtons() {
         //收藏
         findViewById(R.id.btn_favorite_main).setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, ShowFavoriteActivity.class);
@@ -108,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
                         new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
                                 Manifest.permission.CAMERA,
                                 Manifest.permission.RECORD_AUDIO},
-                        VID_REQUESTS);
+                        VIDEO_REQUESTS);
             } else {
                 Intent intent = new Intent(MainActivity.this, RecordActivity.class);
                 startActivity(intent);
@@ -121,20 +121,20 @@ public class MainActivity extends AppCompatActivity {
         });
 
         //刷新
-//        btn_refresh.setOnClickListener(v -> {
-//            fetchFeed();
-//        });
+        findViewById(R.id.btn_refresh).setOnClickListener(v -> {
+            fetchFeed();
+        });
     }
 
     // TODO: 2019/1/27 初始化定位
-    private void initLocate(){
+    private void initLocate() {
 
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
-            case VID_REQUESTS: {
+            case VIDEO_REQUESTS: {
                 int num = grantResults.length;
                 boolean gotPermission = true;
                 for (int i = 0; i < num; i++) {
@@ -151,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             }
-            case LOC_REQUESTS:{
+            case LOCATION_REQUESTS: {
                 // TODO: 2019/1/27 定位权限处理
             }
         }
@@ -174,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void fetchFeed() {
-//        btnRefreshDisable();
+        btnRefreshDisable();
 
         getResponseFromMiniDouyin(new Callback<FeedResponse>() {
             @Override
@@ -182,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this.getApplicationContext(), "REQUEST SUCCESS", Toast.LENGTH_LONG).show();
                 mFeeds = response.body().getFeeds();
                 recyclerView.getAdapter().notifyDataSetChanged();
-//                btnRefreshEnable();
+                btnRefreshEnable();
             }
 
             @Override
@@ -194,15 +194,15 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-//    private void btnRefreshDisable() {
-//        btn_refresh.setText("requesting");
-//        btn_refresh.setEnabled(false);
-//    }
-//
-//    private void btnRefreshEnable() {
-//        btn_refresh.setText("refresh");
-//        btn_refresh.setEnabled(true);
-//    }
+    private void btnRefreshDisable() {
+        textView.setText("获取中");
+        textView.setEnabled(false);
+    }
+
+    private void btnRefreshEnable() {
+        textView.setText("刷新");
+        textView.setEnabled(false);
+    }
 
 
 }
