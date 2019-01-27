@@ -63,7 +63,7 @@ public class PlayActivity extends AppCompatActivity implements MediaPlayer.OnCom
 //        textView.setMovementMethod(ScrollingMovementMethod.getInstance());
 
         //封面
-        String url = intent.getStringExtra("IMAGE_URL");// TODO: 2019/1/26 在传参的时候加上
+        String url = intent.getStringExtra("IMAGE_URL");
         //debug
         url = "http://10.108.10.39:8080/minidouyin/storage/image?path=1548486044060/91d3614ae38d158da044b1029be475b5.png";
     }
