@@ -44,7 +44,6 @@ public class UriUtils {
                     return Environment.getExternalStorageDirectory() + "/"
                             + split[1];
                 }
-                // TODO handle non-primary volumes
             } else if (isDownloadsDocument(uri)) {
                 // DownloadsProvider
                 final String id = DocumentsContract.getDocumentId(uri);

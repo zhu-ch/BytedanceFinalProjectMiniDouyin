@@ -2,9 +2,17 @@ package myself.zch.minidouyin;
 
 import android.Manifest;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationManager;
+import android.net.Uri;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -21,6 +29,8 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +38,11 @@ import myself.zch.minidouyin.Database.FavoriteContract;
 import myself.zch.minidouyin.Database.FavoriteDbHelper;
 import myself.zch.minidouyin.JavaBeans.Feed;
 import myself.zch.minidouyin.JavaBeans.FeedResponse;
+import myself.zch.minidouyin.JavaBeans.PostVideoResponse;
+import myself.zch.minidouyin.Utils.ResourceUtils;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -37,13 +52,49 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "DEBUG_MAIN_ACTIVITY";
     private static final int VIDEO_REQUESTS = 1;
-    private static final int LOCATION_REQUESTS = 101;
+    private static final int LOCATION_REQUESTS = 10;
+    private static final int NETWORK_REQUESTS = 11;
+    private static final int UPLOAD_REQUEST = 100;
+    private static final int PICK_IMAGE = 2;
+    private static final int PICK_VIDEO = 3;
 
+
+    /*************************关于定位*****/
+    String latLongString;
+    private TextView city;
+    private LocationManager locationManager;
+    private double latitude = 0;
+    private double longitude = 0;
+    private Handler handler = new Handler() {
+        public void handleMessage(android.os.Message msg) {
+            double[] data = (double[]) msg.obj;
+
+            List<Address> addList = null;
+            Geocoder ge = new Geocoder(getApplicationContext());
+            try {
+                addList = ge.getFromLocation(data[0], data[1], 1);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (addList != null && addList.size() > 0) {
+                for (int i = 0; i < addList.size(); i++) {
+                    Address ad = addList.get(i);
+                    latLongString = ad.getLocality();
+                }
+            }
+            city.setText(latLongString);
+        }
+
+    };
+
+    /**************************end****/
     private RecyclerView recyclerView;
     private List<Feed> mFeeds = new ArrayList<>();
     TextView textView;
     FavoriteDbHelper mDbHelper;
     SQLiteDatabase db;
+    private Uri mSelectedImage;
+    private Uri mSelectedVideo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,10 +140,11 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(intent);
                 }));
 
+                // TODO: 2019/1/27 setOnLongClickListener无效
                 //长按收藏
+                viewHolder.itemView.setLongClickable(true);
                 viewHolder.itemView.setOnLongClickListener(v -> {
-                    mDbHelper = new FavoriteDbHelper(MainActivity.this);
-                    db = mDbHelper.getWritableDatabase();
+                    Log.d(TAG, "onBindViewHolder: ok");
                     if (db == null) {
                         Log.d(TAG, "onBindViewHolder: db=null");
                         return false;
@@ -110,11 +162,10 @@ public class MainActivity extends AppCompatActivity {
                     long rowId = db.insert(FavoriteContract.FavEntry.TABLE_NAME, null, values);
                     if (rowId != -1) {
                         Toast.makeText(MainActivity.this, "收藏成功！", Toast.LENGTH_SHORT);
-                        return true;
                     } else {
                         Toast.makeText(MainActivity.this, "收藏失败", Toast.LENGTH_SHORT);
-                        return false;
                     }
+                    return false;
                 });
             }
 
@@ -154,22 +205,156 @@ public class MainActivity extends AppCompatActivity {
 
         //发布
         findViewById(R.id.btn_post_main).setOnClickListener(v -> {
-            // TODO: 2019/1/26 直接弹出对话框，准备发布
+            if (ContextCompat.checkSelfPermission(MainActivity.this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        UPLOAD_REQUEST);
+            } else {
+                upLoad();
+            }
         });
 
         //刷新
         findViewById(R.id.btn_refresh).setOnClickListener(v -> {
             fetchFeed();
         });
+
+        //主动获取定位
+        findViewById(R.id.txt_loc).setOnClickListener(v -> {
+            initLocate();
+        });
     }
 
-    // TODO: 2019/1/27 初始化定位
-    private void initLocate() {
+    int MODE = 1;
 
+    private void upLoad() {
+        if (MODE == 1) {
+            chooseImg();
+        } else if (MODE == 2) {
+            chooseVid();
+        } else {
+            postVideo();
+        }
+    }
+
+    private void chooseImg() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"),
+                PICK_IMAGE);
+    }
+
+    private void chooseVid() {
+        Intent intent2 = new Intent();
+        intent2.setType("video/*");
+        intent2.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent2, "Select Video"),
+                PICK_VIDEO);
+    }
+
+    private MultipartBody.Part getMultipartFromUri(String name, Uri uri) {
+        // if NullPointerException thrown, try to allow storage permission in system settings
+        File f = new File(ResourceUtils.getRealPath(this, uri));
+        RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), f);
+        return MultipartBody.Part.createFormData(name, f.getName(), requestFile);
+    }
+
+    private void postToMiniDouyin(Callback<PostVideoResponse> callback) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://10.108.10.39:8080")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        // TODO: 2019/1/27 自定义
+        retrofit.create(IMiniDouyinService.class).createVideo("1120171227",
+                "zch",
+                getMultipartFromUri("cover_image", mSelectedImage),
+                getMultipartFromUri("video", mSelectedVideo)).
+                enqueue(callback);
+    }
+
+    private void postVideo() {
+        postToMiniDouyin(new Callback<PostVideoResponse>() {
+            @Override
+            public void onResponse(Call<PostVideoResponse> call, Response<PostVideoResponse> response) {
+                Toast.makeText(MainActivity.this.getApplicationContext(), "UPLOAD SUCCESS", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(Call<PostVideoResponse> call, Throwable t) {
+                Toast.makeText(MainActivity.this.getApplicationContext(), "FAILED TO UPLOAD", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        MODE = 1;
+    }
+
+    private void initLocate() {
+        if (ContextCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,
+                            LocationManager.NETWORK_PROVIDER,},
+                    LOCATION_REQUESTS);
+        } else {
+            getLocate();
+        }
+    }
+
+    private void getLocate() {
+        city = (TextView) findViewById(R.id.txt_loc);
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        new Thread() {
+            @Override
+            public void run() {
+                if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                        && ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(
+                            MainActivity.this,
+                            new String[]{
+                                    LocationManager.NETWORK_PROVIDER,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                            },
+                            NETWORK_REQUESTS
+                    );
+                    return;
+                }
+                Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                if (location != null) {
+                    latitude = location.getLatitude(); // 经度
+                    longitude = location.getLongitude(); // 纬度
+                    double[] data = {latitude, longitude};
+                    Message msg = handler.obtainMessage();
+                    msg.obj = data;
+                    handler.sendMessage(msg);
+                }
+            }
+        }.start();
     }
 
     private void initDb() {
+        mDbHelper = new FavoriteDbHelper(MainActivity.this);
+        db = mDbHelper.getWritableDatabase();
+    }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK && null != data) {
+            if (requestCode == PICK_IMAGE) {
+                mSelectedImage = data.getData();
+                Log.d(TAG, "selectedImage = " + mSelectedImage);
+                MODE++;
+                upLoad();
+            } else if (requestCode == PICK_VIDEO) {
+                mSelectedVideo = data.getData();
+                Log.d(TAG, "mSelectedVideo = " + mSelectedVideo);
+                MODE++;
+                upLoad();
+            }
+        }
     }
 
     @Override
@@ -177,23 +362,58 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode) {
             case VIDEO_REQUESTS: {
                 int num = grantResults.length;
-                boolean gotPermission = true;
+                boolean gotPermissionVideo = true;
                 for (int i = 0; i < num; i++) {
                     if (grantResults.length > 0 && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                     } else {
-                        gotPermission = false;
-                        Toast.makeText(this, "You denied the necessary permission", Toast.LENGTH_SHORT).show();
+                        gotPermissionVideo = false;
+                        Toast.makeText(this, String.valueOf(i) + "权限获取失败，请重试", Toast.LENGTH_SHORT).show();
                         break;
                     }
                 }
-                if (gotPermission) {
+                if (gotPermissionVideo) {
                     Intent intent = new Intent(MainActivity.this, RecordActivity.class);
                     startActivity(intent);
+                } else {
+                    Toast.makeText(this, "VIDEO 权限获取失败，请重试", Toast.LENGTH_LONG);
                 }
                 break;
             }
             case LOCATION_REQUESTS: {
-                // TODO: 2019/1/27 定位权限处理
+                int num = grantResults.length;
+                boolean gotPermissionLocate = true;
+                for (int i = 0; i < num; i++) {
+                    if (grantResults.length > 0 && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    } else {
+                        gotPermissionLocate = false;
+                        Toast.makeText(this, "LOCATION 权限获取失败，请重试", Toast.LENGTH_SHORT).show();
+                        break;
+                    }
+                }
+                if (gotPermissionLocate) {
+                    getLocate();
+                } else {
+                    Toast.makeText(MainActivity.this, "权限获取失败，请重试", Toast.LENGTH_LONG).show();
+                }
+                break;
+            }
+            case UPLOAD_REQUEST:{
+                int num = grantResults.length;
+                boolean gotPermissionUpload = true;
+                for (int i = 0; i < num; i++) {
+                    if (grantResults.length > 0 && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    } else {
+                        gotPermissionUpload = false;
+                        Toast.makeText(this, "LOCATION 权限获取失败，请重试", Toast.LENGTH_SHORT).show();
+                        break;
+                    }
+                }
+                if (gotPermissionUpload) {
+                    upLoad();
+                } else {
+                    Toast.makeText(MainActivity.this, "权限获取失败，请重试", Toast.LENGTH_LONG).show();
+                }
+                break;
             }
         }
     }
@@ -242,7 +462,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void btnRefreshEnable() {
         textView.setText("刷新");
-        textView.setEnabled(false);
+        textView.setEnabled(true);
     }
 
 

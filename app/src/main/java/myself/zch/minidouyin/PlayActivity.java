@@ -65,7 +65,7 @@ public class PlayActivity extends AppCompatActivity implements MediaPlayer.OnCom
         //封面
         String url = intent.getStringExtra("IMAGE_URL");
         //debug
-        url = "http://10.108.10.39:8080/minidouyin/storage/image?path=1548486044060/91d3614ae38d158da044b1029be475b5.png";
+        //url = "http://10.108.10.39:8080/minidouyin/storage/image?path=1548486044060/91d3614ae38d158da044b1029be475b5.png";
     }
 
     public void start(View view) {
@@ -95,7 +95,7 @@ public class PlayActivity extends AppCompatActivity implements MediaPlayer.OnCom
     public void play() {
         String url = intent.getStringExtra("VIDEO_URL");
         //debug
-        url = "http://10.108.10.39:8080/minidouyin/storage/video?path=1548486044060/7332511a51549683f5585e59321de6c7.mov";
+        //url = "http://10.108.10.39:8080/minidouyin/storage/video?path=1548486044060/7332511a51549683f5585e59321de6c7.mov";
         mediaPlayer = new MediaPlayer();
         try {
             mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);

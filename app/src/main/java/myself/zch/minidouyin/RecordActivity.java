@@ -1,5 +1,6 @@
 package myself.zch.minidouyin;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
@@ -8,7 +9,10 @@ import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Surface;
@@ -23,6 +27,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
+import myself.zch.minidouyin.JavaBeans.PostVideoResponse;
+import myself.zch.minidouyin.Utils.ResourceUtils;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
 import static android.hardware.Camera.CameraInfo.CAMERA_FACING_BACK;
 import static android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT;
 import static myself.zch.minidouyin.Utils.Utils.MEDIA_TYPE_IMAGE;
@@ -30,7 +45,7 @@ import static myself.zch.minidouyin.Utils.Utils.MEDIA_TYPE_VIDEO;
 import static myself.zch.minidouyin.Utils.Utils.getOutputMediaFile;
 
 public class RecordActivity extends AppCompatActivity implements SurfaceHolder.Callback {
-    private static final String TAG="DEBUG_RECORD_ACTIVITY";
+    private static final String TAG = "DEBUG_RECORD_ACTIVITY";
 
     private SurfaceView mSurfaceView;
     private Camera mCamera;
@@ -97,7 +112,7 @@ public class RecordActivity extends AppCompatActivity implements SurfaceHolder.C
                 //停止录制
                 releaseMediaRecorder();
                 isRecording = false;
-                // TODO: 2019/1/27 直接发布？
+                upLoad();//上传
             } else {
                 //录制
                 prepareVideoRecorder();
@@ -196,25 +211,26 @@ public class RecordActivity extends AppCompatActivity implements SurfaceHolder.C
     }
 
 
-
     private boolean prepareVideoRecorder() {
-        // TODO: 2019/1/27 10s停止
         //准备MediaRecorder
         mMediaRecorder = new MediaRecorder();
-        //Step 1: Unlock and set camera to MediaRecorder
+
         mCamera.unlock();
         mMediaRecorder.setCamera(mCamera);
-        //Step 2: Set sources
+        mMediaRecorder.setMaxDuration(10 * 1000);//单位：毫秒
+
         mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
-        //Step 3: Set a CamcorderProfile (requires API Level 8 or higher)
-        mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
-        //Step 4: Set output file
+
+        //设置清晰度
+        mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_LOW));
+
         mMediaRecorder.setOutputFile(getOutputMediaFile(MEDIA_TYPE_VIDEO).toString());
-        //Step 5: Set the preview output
+        Log.d(TAG, "prepareVideoRecorder: " + getOutputMediaFile(MEDIA_TYPE_VIDEO).toString());
+
         mMediaRecorder.setPreviewDisplay(mSurfaceView.getHolder().getSurface());
         mMediaRecorder.setOrientationHint(rotationDegree);
-        //Step 6: Prepare configured MediaRecorder
+
         try {
             mMediaRecorder.prepare();
             mMediaRecorder.start();
@@ -310,5 +326,93 @@ public class RecordActivity extends AppCompatActivity implements SurfaceHolder.C
             }
         }
         return optimalSize;
+    }
+
+    private static final int PICK_IMAGE = 2;
+    private static final int PICK_VIDEO = 3;
+    private static final int UPLOAD_REQUEST = 100;
+    private Uri mSelectedImage;
+    private Uri mSelectedVideo;
+
+    int MODE = 1;
+
+    private void upLoad() {
+        if (MODE == 1) {
+            chooseImg();
+        } else if (MODE == 2) {
+            chooseVid();
+        } else {
+            postVideo();
+        }
+    }
+
+    private void chooseImg() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"),
+                PICK_IMAGE);
+    }
+
+    private void chooseVid() {
+        Intent intent2 = new Intent();
+        intent2.setType("video/*");
+        intent2.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent2, "Select Video"),
+                PICK_VIDEO);
+    }
+
+    private MultipartBody.Part getMultipartFromUri(String name, Uri uri) {
+        // if NullPointerException thrown, try to allow storage permission in system settings
+        File f = new File(ResourceUtils.getRealPath(this, uri));
+        RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), f);
+        return MultipartBody.Part.createFormData(name, f.getName(), requestFile);
+    }
+
+    private void postToMiniDouyin(Callback<PostVideoResponse> callback) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://10.108.10.39:8080")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        // TODO: 2019/1/27 自定义
+        retrofit.create(IMiniDouyinService.class).createVideo("1120171227",
+                "zch",
+                getMultipartFromUri("cover_image", mSelectedImage),
+                getMultipartFromUri("video", mSelectedVideo)).
+                enqueue(callback);
+    }
+
+    private void postVideo() {
+        postToMiniDouyin(new Callback<PostVideoResponse>() {
+            @Override
+            public void onResponse(Call<PostVideoResponse> call, Response<PostVideoResponse> response) {
+                Toast.makeText(RecordActivity.this.getApplicationContext(), "UPLOAD SUCCESS", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(Call<PostVideoResponse> call, Throwable t) {
+                Toast.makeText(RecordActivity.this.getApplicationContext(), "FAILED TO UPLOAD", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        MODE = 1;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK && null != data) {
+            if (requestCode == PICK_IMAGE) {
+                mSelectedImage = data.getData();
+                Log.d(TAG, "selectedImage = " + mSelectedImage);
+                MODE++;
+                upLoad();
+            } else if (requestCode == PICK_VIDEO) {
+                mSelectedVideo = data.getData();
+                Log.d(TAG, "mSelectedVideo = " + mSelectedVideo);
+                MODE++;
+                upLoad();
+            }
+        }
     }
 }
