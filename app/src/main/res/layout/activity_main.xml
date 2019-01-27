@@ -13,9 +13,8 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="25dp"
-        android:orientation="horizontal"
-        android:layout_marginTop="55dp">
+        android:layout_height="30dp"
+        android:layout_marginTop="25dp">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -28,7 +27,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/btn_favorite_main"
                 android:text="推荐 |"
-                android:textColor="@android:color/white"
+                android:textColor="#f2f2f2"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
@@ -36,8 +35,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/beijing"
-                android:text="北京"
-                android:textColor="@android:color/white"
+                android:text=" 北京"
+                android:textColor="#f2f2f2"
                 android:textStyle="bold"
                 android:textSize="20sp"/>
         </LinearLayout>
@@ -46,8 +45,8 @@
             android:id="@+id/search"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="0dp"
             android:layout_alignParentRight="true"
+            android:layout_marginRight="20dp"
             android:src="@mipmap/search"
             android:tint="#f2f2f2" />
     </RelativeLayout>
@@ -61,7 +60,9 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="?actionBarSize"
+        android:layout_height="wrap_content"
+        android:paddingBottom="5sp"
+        android:paddingTop="5sp"
         android:id="@+id/bottom"
         android:layout_alignParentBottom="true"
         android:orientation="horizontal"
@@ -74,7 +75,7 @@
             android:gravity="center"
             android:textColor="#f2f2f2"
             android:text="首页"
-            android:textSize="20sp"
+            android:textSize="17sp"
             android:textStyle="bold"/>
         <TextView
             android:layout_width="0dp"
@@ -83,7 +84,7 @@
             android:gravity="center"
             android:textColor="#f2f2f2"
             android:text="关注"
-            android:textSize="20sp"
+            android:textSize="17sp"
             android:textStyle="bold"/>
         <ImageView
             android:id="@+id/btn_record_main"
@@ -98,7 +99,7 @@
             android:gravity="center"
             android:textColor="#f2f2f2"
             android:text="消息"
-            android:textSize="20sp"
+            android:textSize="17sp"
             android:textStyle="bold"/>
         <TextView
             android:id="@+id/btn_post_main"
@@ -108,7 +109,7 @@
             android:gravity="center"
             android:textColor="#f2f2f2"
             android:text="提交"
-            android:textSize="20sp"
+            android:textSize="17sp"
             android:textStyle="bold"/>
 
     </LinearLayout>
