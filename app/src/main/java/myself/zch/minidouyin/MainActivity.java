@@ -1,8 +1,10 @@
 package myself.zch.minidouyin;
 
 import android.Manifest;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -22,6 +24,8 @@ import com.bumptech.glide.Glide;
 import java.util.ArrayList;
 import java.util.List;
 
+import myself.zch.minidouyin.Database.FavoriteContract;
+import myself.zch.minidouyin.Database.FavoriteDbHelper;
 import myself.zch.minidouyin.JavaBeans.Feed;
 import myself.zch.minidouyin.JavaBeans.FeedResponse;
 import retrofit2.Call;
@@ -35,10 +39,11 @@ public class MainActivity extends AppCompatActivity {
     private static final int VIDEO_REQUESTS = 1;
     private static final int LOCATION_REQUESTS = 101;
 
-
     private RecyclerView recyclerView;
     private List<Feed> mFeeds = new ArrayList<>();
     TextView textView;
+    FavoriteDbHelper mDbHelper;
+    SQLiteDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
         initRecyclerView();
         initButtons();
         initLocate();
+        initDb();
         fetchFeed();
     }
 
@@ -68,8 +74,11 @@ public class MainActivity extends AppCompatActivity {
             public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
                 ImageView iv = (ImageView) viewHolder.itemView;
 
+                //Glide加载图片
                 String url = mFeeds.get(i).getImage_url();
                 Glide.with(iv.getContext()).load(url).into(iv);
+
+                //单击进入详情页面播放
                 viewHolder.itemView.setOnClickListener((v -> {
                     Intent intent = new Intent(MainActivity.this, PlayActivity.class);
                     intent.putExtra("VIDEO_URL", mFeeds.get(i).getVideo_url());
@@ -79,6 +88,34 @@ public class MainActivity extends AppCompatActivity {
 
                     startActivity(intent);
                 }));
+
+                //长按收藏
+                viewHolder.itemView.setOnLongClickListener(v -> {
+                    mDbHelper = new FavoriteDbHelper(MainActivity.this);
+                    db = mDbHelper.getWritableDatabase();
+                    if (db == null) {
+                        Log.d(TAG, "onBindViewHolder: db=null");
+                        return false;
+                    }
+
+                    // TODO: 2019/1/27 查询之前是否已经收藏
+
+                    ContentValues values = new ContentValues();
+                    values.put(FavoriteContract.FavEntry.COLUMN_DATE, System.currentTimeMillis());
+                    values.put(FavoriteContract.FavEntry.COLUMN_STUDENT_ID, mFeeds.get(i).getStudent_id());
+                    values.put(FavoriteContract.FavEntry.COLUMN_USER_NAME, mFeeds.get(i).getUser_name());
+                    values.put(FavoriteContract.FavEntry.COLUMN_IMAGE_URL, mFeeds.get(i).getImage_url());
+                    values.put(FavoriteContract.FavEntry.COLUMN__VIDEO_URL, mFeeds.get(i).getVideo_url());
+
+                    long rowId = db.insert(FavoriteContract.FavEntry.TABLE_NAME, null, values);
+                    if (rowId != -1) {
+                        Toast.makeText(MainActivity.this, "收藏成功！", Toast.LENGTH_SHORT);
+                        return true;
+                    } else {
+                        Toast.makeText(MainActivity.this, "收藏失败", Toast.LENGTH_SHORT);
+                        return false;
+                    }
+                });
             }
 
             @Override
@@ -128,6 +165,10 @@ public class MainActivity extends AppCompatActivity {
 
     // TODO: 2019/1/27 初始化定位
     private void initLocate() {
+
+    }
+
+    private void initDb() {
 
     }
 
@@ -189,7 +230,7 @@ public class MainActivity extends AppCompatActivity {
             public void onFailure(Call<FeedResponse> call, Throwable t) {
                 Toast.makeText(MainActivity.this.getApplicationContext(), "FAILED TO REQUEST" + t.getMessage(), Toast.LENGTH_LONG).show();
                 Log.d(TAG, "onFailure: " + t.getMessage());
-//                btnRefreshEnable();
+                btnRefreshEnable();
             }
         });
     }
