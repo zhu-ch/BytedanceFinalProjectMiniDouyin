@@ -1,5 +1,6 @@
 package myself.zch.minidouyin;
 
+import android.app.ActionBar;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -11,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -29,13 +31,13 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "DEBUG_MAIN_ACTIVITY";
 
-    private Button btn_record;
-    private Button btn_favorite;
-    private Button btn_post;
+    private ImageView btn_record;
+    private TextView btn_favorite;
+    private TextView btn_post;
     private RecyclerView recyclerView;
     private List<Feed> mFeeds = new ArrayList<>();
     // TODO: 2019/1/26 refresh按钮？
-    private Button btn_refresh;
+    private TextView btn_refresh;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
