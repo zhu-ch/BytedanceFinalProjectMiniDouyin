@@ -99,75 +99,21 @@ public class PlayActivity extends AppCompatActivity implements OnSeekBarChangeLi
         //是采用自己内部的双缓冲区，而是等待别人推送数据
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 
+        initBtns();
+    }
 
-        mSurfaceView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (currentState == PLAYING) {
-                    long firtime = System.currentTimeMillis();
-                    while (System.currentTimeMillis() - firtime < 500) {
-                        mSurfaceView.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                currentState = PLAYING;
-                            }
-                        });
-                    }
-                }
-////                    if(currentState==PAUSING){
-////                        mMediapPlayer.pause();
-////                        //停止刷新主线程
-////                        isStopUpdatingProgress = true;
-////                    }
-//                }
-//                else if (currentState==PAUSING){
-//                    play();
-//                }
-                if (currentState == NORMAL) {
-                    mProcessBar.setVisibility(View.VISIBLE);
-                }
-                if (currentState == STOPING) {
-                    mProcessBar.setVisibility(View.INVISIBLE);
-                }
-                process_notice.setVisibility(View.INVISIBLE);
-
-                if (mMediapPlayer != null) {
-                    if (currentState != PAUSING) {
-                        mMediapPlayer.start();
-                        currentState = PLAYING;
-                        //每次在调用刷新线程时，都要设为false
-                        isStopUpdatingProgress = false;
-                        return;
-                        //下面这个判断完美的解决了停止后重新播放的，释放两个资源的问题
-                    } else if (currentState == STOPING) {
-                        mMediapPlayer.reset();
-                        mMediapPlayer.release();
-                    } else if (currentState == PAUSING) {
-                        play();
-                    }
-                }
-                play();
+    private void initBtns(){
+        mSurfaceView.setOnClickListener(v -> {
+            Log.d(TAG, "onCreate: CLICK");
+            if(mMediapPlayer==null){
+                initPlayer();
+            }
+            if(mMediapPlayer.isPlaying()){
+                mMediapPlayer.pause();
+            }else {
+                mMediapPlayer.start();
             }
         });
-
-
-//        mProcessBar.setVisibility(View.VISIBLE);
-//        process_notice.setVisibility(View.INVISIBLE);
-//
-//        if (mMediapPlayer != null) {
-//            if (currentState != PAUSING) {
-//                mMediapPlayer.start();
-//                currentState = PLAYING;
-//                //每次在调用刷新线程时，都要设为false
-//                isStopUpdatingProgress = false;
-//                return;
-//                //下面这个判断完美的解决了停止后重新播放的，释放两个资源的问题
-//            } else if (currentState == STOPING) {
-//                mMediapPlayer.reset();
-//                mMediapPlayer.release();
-//            }
-//        }
-//        play();
 
         mSurfaceView.setOnLongClickListener(v -> {
             initDb();
@@ -191,48 +137,11 @@ public class PlayActivity extends AppCompatActivity implements OnSeekBarChangeLi
             } else {
                 Toast.makeText(PlayActivity.this, "收藏失败", Toast.LENGTH_SHORT).show();
             }
-            return false;
+            return true;
         });
     }
 
-    private void initDb() {
-        mDbHelper = new FavoriteDbHelper(PlayActivity.this);
-        db = mDbHelper.getWritableDatabase();
-    }
-
-    /**
-     * 开始
-     */
-//    public void video_start_or_pause(View v) {
-//        if (mMediapPlayer != null) {
-//            if (currentState != PAUSING) {
-//                mMediapPlayer.start();
-//                currentState = PLAYING;
-//                //每次在调用刷新线程时，都要设为false
-//                isStopUpdatingProgress = false;
-//                return;
-//                //下面这个判断完美的解决了停止后重新播放的，释放两个资源的问题
-//            } else if (currentState == STOPING) {
-//                mMediapPlayer.reset();
-//                mMediapPlayer.release();
-//            }
-//        }
-//        play();
-//    }
-
-    /**
-     * 停止
-     */
-    public void stop(View v) {
-        if (mMediapPlayer != null) {
-            mMediapPlayer.stop();
-        }
-    }
-
-    /**
-     * 播放输入框的文件
-     */
-    private void play() {
+    private void initPlayer() {
         String path = etPath;
         mMediapPlayer = new MediaPlayer();
         try {
@@ -276,27 +185,9 @@ public class PlayActivity extends AppCompatActivity implements OnSeekBarChangeLi
         }
     }
 
-    /**
-     * 暂停
-     */
-    public void pause(View v) {
-        if (mMediapPlayer != null && currentState == PLAYING) {
-            mMediapPlayer.pause();
-            currentState = PAUSING;
-            //停止刷新主线程
-            isStopUpdatingProgress = true;
-        }
-    }
-
-    /**
-     * 重播
-     */
-    public void video_restart(View v) {
-        if (mMediapPlayer != null) {
-            mMediapPlayer.reset();
-            mMediapPlayer.release();
-            play();
-        }
+    private void initDb() {
+        mDbHelper = new FavoriteDbHelper(PlayActivity.this);
+        db = mDbHelper.getWritableDatabase();
     }
 
     @Override

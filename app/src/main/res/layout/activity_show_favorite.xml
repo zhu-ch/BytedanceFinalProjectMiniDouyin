@@ -7,6 +7,14 @@
     tools:context=".ShowFavoriteActivity"
     android:paddingBottom="0dp">
 
+    <TextView
+        android:id="@+id/no_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="您还没有收藏"
+        android:visibility="invisible"/>
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/rv_favorite"
         android:layout_width="match_parent"
@@ -26,7 +34,7 @@
         android:background="#000000">
 
         <TextView
-            android:id="@+id/btn_homepage"
+            android:id="@+id/btn_homepage_fav"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"

@@ -63,8 +63,6 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private List<Feed> mFeeds = new ArrayList<>();
     TextView textView;
-    FavoriteDbHelper mDbHelper;
-    SQLiteDatabase db;
     private Uri mSelectedImage;
     private Uri mSelectedVideo;
     private String studentId = null;
@@ -106,7 +104,6 @@ public class MainActivity extends AppCompatActivity {
         initRecyclerView();
         initButtons();
         initLocate();
-        initDb();
         fetchFeed();
     }
 
@@ -360,11 +357,6 @@ public class MainActivity extends AppCompatActivity {
         }.start();
     }
 
-    private void initDb() {
-        mDbHelper = new FavoriteDbHelper(MainActivity.this);
-        db = mDbHelper.getWritableDatabase();
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -393,15 +385,13 @@ public class MainActivity extends AppCompatActivity {
                     if (grantResults.length > 0 && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                     } else {
                         gotPermissionVideo = false;
-                        Toast.makeText(this, String.valueOf(i) + "权限获取失败，请重试", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "权限获取失败，请重试", Toast.LENGTH_SHORT).show();
                         break;
                     }
                 }
                 if (gotPermissionVideo) {
                     Intent intent = new Intent(MainActivity.this, RecordActivity.class);
                     startActivity(intent);
-                } else {
-                    Toast.makeText(this, "VIDEO 权限获取失败，请重试", Toast.LENGTH_LONG);
                 }
                 break;
             }
