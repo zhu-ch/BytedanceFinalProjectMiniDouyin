@@ -21,6 +21,8 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.airbnb.lottie.LottieAnimationView;
+
 import myself.zch.minidouyin.Database.FavoriteContract;
 import myself.zch.minidouyin.Database.FavoriteDbHelper;
 
@@ -29,7 +31,7 @@ public class PlayActivity extends AppCompatActivity implements OnSeekBarChangeLi
 
     private boolean isStopUpdatingProgress = false;
     private String etPath;
-    private MediaPlayer mMediapPlayer;
+    private MediaPlayer mMediapPlayer = null;
     private SeekBar mSeekBar;
     private TextView tvCurrentTime;
     private TextView tvTotalTime;
@@ -37,8 +39,11 @@ public class PlayActivity extends AppCompatActivity implements OnSeekBarChangeLi
     private TextView author_name;
     private SurfaceView mSurfaceView;
     private ProgressBar mProcessBar;
-    FavoriteDbHelper mDbHelper;
-    SQLiteDatabase db;
+    private FavoriteDbHelper mDbHelper;
+    private SQLiteDatabase db;
+    private LottieAnimationView favorite;
+    private TextView process_notice;
+    private TextView loading;
 
     /**
      * 闲置
@@ -48,30 +53,19 @@ public class PlayActivity extends AppCompatActivity implements OnSeekBarChangeLi
      * 播放中
      */
     private final int PLAYING = 1;
-    /**
-     * 暂停
-     */
-    private final int PAUSING = 2;
-    /**
-     * 停止中
-     */
-    private final int STOPING = 3;
 
     /**
      * 播放器当前的状态，默认是空闲状态
      */
     private int currentState = NORMAL;
-
-    /**
-     * 用行动打消忧虑
-     */
     private SurfaceHolder holder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
-
+        favorite = findViewById(R.id.favorite);
+        favorite.setVisibility(View.INVISIBLE);
 
         //从另一个活动拿来
         etPath = getIntent().getStringExtra("VIDEO_URL");
@@ -100,15 +94,16 @@ public class PlayActivity extends AppCompatActivity implements OnSeekBarChangeLi
         initBtns();
     }
 
-    private void initBtns(){
+    private void initBtns() {
+        // TODO: 2019/1/28 最后的bug
         mSurfaceView.setOnClickListener(v -> {
             Log.d(TAG, "onCreate: CLICK");
-            if(mMediapPlayer==null){
+            if (mMediapPlayer == null) {
                 initPlayer();
             }
-            if(mMediapPlayer.isPlaying()){
+            if (mMediapPlayer.isPlaying()) {
                 mMediapPlayer.pause();
-            }else {
+            } else {
                 mMediapPlayer.start();
             }
         });
@@ -131,6 +126,7 @@ public class PlayActivity extends AppCompatActivity implements OnSeekBarChangeLi
 
             long rowId = db.insert(FavoriteContract.FavEntry.TABLE_NAME, null, values);
             if (rowId != -1) {
+                favorite.playAnimation();
                 Toast.makeText(PlayActivity.this, "收藏成功！", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(PlayActivity.this, "收藏失败", Toast.LENGTH_SHORT).show();
@@ -178,6 +174,7 @@ public class PlayActivity extends AppCompatActivity implements OnSeekBarChangeLi
 
             isStopUpdatingProgress = false;
             new Thread(new UpdateProgressRunnable()).start();
+            favorite.setVisibility(View.VISIBLE);
         } catch (Exception e) {
             e.printStackTrace();
         }

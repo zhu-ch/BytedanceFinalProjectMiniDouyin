@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:layout_height="match_parent">
 
 
     <SurfaceView
@@ -12,23 +12,32 @@
         android:layout_height="match_parent"
         android:transitionName="sharedView" />
 
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/favorite"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:lottie_rawRes="@raw/favourite_app_icon" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:weightSum="10">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="7.5"
-            android:orientation="vertical"
-            android:gravity="center">
+            android:gravity="center"
+            android:orientation="vertical">
+
             <ProgressBar
+                android:id="@+id/progressBar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:visibility="invisible"
-                android:id="@+id/progressBar"/>
+                android:visibility="invisible" />
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -42,24 +51,27 @@
                 android:layout_height="0dp"
                 android:layout_marginLeft="20dp"
                 android:layout_weight="3"
-                tools:text="hhhhhhhh"
+                android:textColor="#ABFFFFFF"
                 android:textSize="28sp"
-                android:textColor="#ABFFFFFF"/>
+                tools:text="hhhhhhhh" />
+
             <TextView
                 android:id="@+id/author_id"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_marginLeft="20dp"
                 android:layout_weight="2"
-                tools:text="hhhhhhh"
                 android:textColor="#A1FFFFFF"
-                android:textSize="14sp"/>
+                android:textSize="14sp"
+                tools:text="hhhhhhh" />
         </LinearLayout>
+
         <SeekBar
             android:id="@+id/sb_progress"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:outlineAmbientShadowColor="#C0FFFFFF"/>
+            android:outlineAmbientShadowColor="#C0FFFFFF" />
+
         <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
