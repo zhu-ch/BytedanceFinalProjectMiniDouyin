@@ -95,7 +95,6 @@ public class PlayActivity extends AppCompatActivity implements OnSeekBarChangeLi
     }
 
     private void initBtns() {
-        // TODO: 2019/1/28 最后的bug
         mSurfaceView.setOnClickListener(v -> {
             Log.d(TAG, "onCreate: CLICK");
             if (mMediapPlayer == null) {
