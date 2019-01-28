@@ -1,6 +1,9 @@
 package myself.zch.minidouyin;
 
 import android.Manifest;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
@@ -13,13 +16,16 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import java.io.File;
@@ -75,11 +81,11 @@ public class RecordActivity extends AppCompatActivity implements SurfaceHolder.C
                 try {
                     mCamera = getCamera(CAMERA_TYPE);
                     mCamera.setPreviewDisplay(holder);
+                    mCamera.startPreview();
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                //mCamera.setPreviewDisplay(holder);
-                mCamera.startPreview();
             }
 
             @Override
@@ -98,21 +104,20 @@ public class RecordActivity extends AppCompatActivity implements SurfaceHolder.C
             myAutoCallBack = new Camera.AutoFocusCallback() {
                 @Override
                 public void onAutoFocus(boolean b, Camera camera) {
-
                 }
             };
-            if (mCamera == null) mCamera = getCamera(CAMERA_TYPE);
+            if (mCamera == null)
+                mCamera = getCamera(CAMERA_TYPE);
             mCamera.autoFocus(myAutoCallBack);
             mCamera.takePicture(null, null, mPicture);
+            Toast.makeText(this, "拍照成功", Toast.LENGTH_SHORT).show();
         });
 
         findViewById(R.id.btn_record).setOnClickListener(v -> {
             //录制，第一次点击是start，第二次点击是stop
             if (isRecording) {
                 //停止录制
-                releaseMediaRecorder();
-                isRecording = false;
-                upLoad();//上传
+                stopRecord();
             } else {
                 //录制
                 prepareVideoRecorder();
@@ -130,7 +135,7 @@ public class RecordActivity extends AppCompatActivity implements SurfaceHolder.C
                 mCamera.startPreview();
             } catch (Exception e) {
                 e.printStackTrace();
-                Toast.makeText(this, "ERROR TO CHANGE", Toast.LENGTH_LONG);
+                Toast.makeText(this, "切换失败", Toast.LENGTH_LONG).show();
             }
 
 
@@ -143,8 +148,14 @@ public class RecordActivity extends AppCompatActivity implements SurfaceHolder.C
                 parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
                 mCamera.setParameters(parameters);
             } else
-                Toast.makeText(this, "Your device does not support", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "您的设备不支持自动调焦", Toast.LENGTH_SHORT).show();
         });
+    }
+
+    private void stopRecord() {
+        releaseMediaRecorder();
+        isRecording = false;
+        upLoad();//上传
     }
 
     public Camera getCamera(int position) {
@@ -217,7 +228,7 @@ public class RecordActivity extends AppCompatActivity implements SurfaceHolder.C
 
         mCamera.unlock();
         mMediaRecorder.setCamera(mCamera);
-        mMediaRecorder.setMaxDuration(10 * 1000);//单位：毫秒
+        mMediaRecorder.setMaxDuration(3 * 1000);//单位：毫秒
 
         mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
@@ -230,7 +241,7 @@ public class RecordActivity extends AppCompatActivity implements SurfaceHolder.C
 
         mMediaRecorder.setPreviewDisplay(mSurfaceView.getHolder().getSurface());
         mMediaRecorder.setOrientationHint(rotationDegree);
-
+        mMediaRecorder.setOnInfoListener(this::onInfo);
         try {
             mMediaRecorder.prepare();
             mMediaRecorder.start();
@@ -282,6 +293,7 @@ public class RecordActivity extends AppCompatActivity implements SurfaceHolder.C
             fos.write(data);
             fos.close();
 
+            //照片实时更新至系统
             MediaStore.Images.Media.insertImage(getContentResolver(), BitmapFactory.decodeFile(pictureFile.getAbsolutePath()), pictureFile.getName(), null);
             Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
             Uri uri = Uri.fromFile(pictureFile);
@@ -333,14 +345,59 @@ public class RecordActivity extends AppCompatActivity implements SurfaceHolder.C
     private static final int UPLOAD_REQUEST = 100;
     private Uri mSelectedImage;
     private Uri mSelectedVideo;
+    private String studentId = null;
+    private String userName = null;
 
     int MODE = 1;
 
     private void upLoad() {
+        Log.d(TAG, "upLoad: " + String.valueOf(MODE));
         if (MODE == 1) {
             chooseImg();
         } else if (MODE == 2) {
             chooseVid();
+        } else if (MODE == 3) {
+            if (studentId != null) {//避免重复输入
+                MODE++;
+                upLoad();
+            } else {
+                View view = getLayoutInflater().inflate(R.layout.half_dialog_view, null);
+                final EditText editText = (EditText) view.findViewById(R.id.dialog_edit);
+                AlertDialog dialog = new AlertDialog.Builder(this)
+                        .setTitle("输入学号")//设置对话框的标题
+                        .setView(view)
+                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                studentId = editText.getText().toString();
+                                dialog.dismiss();
+                                MODE++;
+                                upLoad();
+                            }
+                        }).create();
+                dialog.show();
+            }
+        } else if (MODE == 4) {
+            if (userName != null) {//避免重复输入
+                MODE++;
+                upLoad();
+            } else {
+                View view = getLayoutInflater().inflate(R.layout.half_dialog_view, null);
+                final EditText editText = (EditText) view.findViewById(R.id.dialog_edit);
+                AlertDialog dialog = new AlertDialog.Builder(this)
+                        .setTitle("输入用户名")//设置对话框的标题
+                        .setView(view)
+                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                userName = editText.getText().toString();
+                                dialog.dismiss();
+                                MODE++;
+                                upLoad();
+                            }
+                        }).create();
+                dialog.show();
+            }
         } else {
             postVideo();
         }
@@ -374,9 +431,8 @@ public class RecordActivity extends AppCompatActivity implements SurfaceHolder.C
                 .baseUrl("http://10.108.10.39:8080")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        // TODO: 2019/1/27 自定义
-        retrofit.create(IMiniDouyinService.class).createVideo("1120171227",
-                "zch",
+        retrofit.create(IMiniDouyinService.class).createVideo(studentId,
+                userName,
                 getMultipartFromUri("cover_image", mSelectedImage),
                 getMultipartFromUri("video", mSelectedVideo)).
                 enqueue(callback);
@@ -386,12 +442,12 @@ public class RecordActivity extends AppCompatActivity implements SurfaceHolder.C
         postToMiniDouyin(new Callback<PostVideoResponse>() {
             @Override
             public void onResponse(Call<PostVideoResponse> call, Response<PostVideoResponse> response) {
-                Toast.makeText(RecordActivity.this.getApplicationContext(), "UPLOAD SUCCESS", Toast.LENGTH_LONG).show();
+                Toast.makeText(RecordActivity.this.getApplicationContext(), "上传成功", Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onFailure(Call<PostVideoResponse> call, Throwable t) {
-                Toast.makeText(RecordActivity.this.getApplicationContext(), "FAILED TO UPLOAD", Toast.LENGTH_LONG).show();
+                Toast.makeText(RecordActivity.this.getApplicationContext(), "上传失败", Toast.LENGTH_LONG).show();
             }
         });
 
@@ -413,6 +469,13 @@ public class RecordActivity extends AppCompatActivity implements SurfaceHolder.C
                 MODE++;
                 upLoad();
             }
+        }
+    }
+
+    public void onInfo(MediaRecorder mr, int what, int extra) {
+        if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED) {
+            Log.v("AUDIOCAPTURE", "Maximum Duration Reached");
+            stopRecord();
         }
     }
 }

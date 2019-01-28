@@ -89,8 +89,6 @@ public class ShowFavoriteActivity extends AppCompatActivity {
                             FavoriteContract.FavEntry._ID + " =?",
                             new String[]{String.valueOf(mEntry.get(i).id)});
                     if (rows > 0) {
-                        // TODO: 如何更新？
-                        //entryAdapter.refresh(loadEntiresFromDatabase());
                         entryAdapter.notifyDataSetChanged();
                         return true;
                     }

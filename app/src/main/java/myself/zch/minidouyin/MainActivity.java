@@ -3,6 +3,7 @@ package myself.zch.minidouyin;
 import android.Manifest;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
@@ -16,6 +17,7 @@ import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -23,6 +25,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -57,7 +60,15 @@ public class MainActivity extends AppCompatActivity {
     private static final int UPLOAD_REQUEST = 100;
     private static final int PICK_IMAGE = 2;
     private static final int PICK_VIDEO = 3;
-
+    private RecyclerView recyclerView;
+    private List<Feed> mFeeds = new ArrayList<>();
+    TextView textView;
+    FavoriteDbHelper mDbHelper;
+    SQLiteDatabase db;
+    private Uri mSelectedImage;
+    private Uri mSelectedVideo;
+    private String studentId = null;
+    private String userName = null;
 
     /*************************关于定位*****/
     String latLongString;
@@ -86,15 +97,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
     };
-
-    /**************************end****/
-    private RecyclerView recyclerView;
-    private List<Feed> mFeeds = new ArrayList<>();
-    TextView textView;
-    FavoriteDbHelper mDbHelper;
-    SQLiteDatabase db;
-    private Uri mSelectedImage;
-    private Uri mSelectedVideo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -139,34 +141,6 @@ public class MainActivity extends AppCompatActivity {
 
                     startActivity(intent);
                 }));
-
-                // TODO: 2019/1/27 setOnLongClickListener无效
-                //长按收藏
-                viewHolder.itemView.setLongClickable(true);
-                viewHolder.itemView.setOnLongClickListener(v -> {
-                    Log.d(TAG, "onBindViewHolder: ok");
-                    if (db == null) {
-                        Log.d(TAG, "onBindViewHolder: db=null");
-                        return false;
-                    }
-
-                    // TODO: 2019/1/27 查询之前是否已经收藏
-
-                    ContentValues values = new ContentValues();
-                    values.put(FavoriteContract.FavEntry.COLUMN_DATE, System.currentTimeMillis());
-                    values.put(FavoriteContract.FavEntry.COLUMN_STUDENT_ID, mFeeds.get(i).getStudent_id());
-                    values.put(FavoriteContract.FavEntry.COLUMN_USER_NAME, mFeeds.get(i).getUser_name());
-                    values.put(FavoriteContract.FavEntry.COLUMN_IMAGE_URL, mFeeds.get(i).getImage_url());
-                    values.put(FavoriteContract.FavEntry.COLUMN__VIDEO_URL, mFeeds.get(i).getVideo_url());
-
-                    long rowId = db.insert(FavoriteContract.FavEntry.TABLE_NAME, null, values);
-                    if (rowId != -1) {
-                        Toast.makeText(MainActivity.this, "收藏成功！", Toast.LENGTH_SHORT);
-                    } else {
-                        Toast.makeText(MainActivity.this, "收藏失败", Toast.LENGTH_SHORT);
-                    }
-                    return false;
-                });
             }
 
             @Override
@@ -222,17 +196,70 @@ public class MainActivity extends AppCompatActivity {
 
         //主动获取定位
         findViewById(R.id.txt_loc).setOnClickListener(v -> {
-            initLocate();
+            Log.d(TAG, "initButtons: listener");
+            if (ContextCompat.checkSelfPermission(MainActivity.this,
+                    Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,
+                                LocationManager.NETWORK_PROVIDER,},
+                        LOCATION_REQUESTS);
+            } else {
+                getLocate();
+            }
         });
     }
 
     int MODE = 1;
 
     private void upLoad() {
+        Log.d(TAG, "upLoad: " + String.valueOf(MODE));
         if (MODE == 1) {
             chooseImg();
         } else if (MODE == 2) {
             chooseVid();
+        } else if (MODE == 3) {
+            if (studentId != null) {//避免重复输入
+                MODE++;
+                upLoad();
+            } else {
+                View view = getLayoutInflater().inflate(R.layout.half_dialog_view, null);
+                final EditText editText = (EditText) view.findViewById(R.id.dialog_edit);
+                AlertDialog dialog = new AlertDialog.Builder(this)
+                        .setTitle("输入学号")//设置对话框的标题
+                        .setView(view)
+                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                studentId = editText.getText().toString();
+                                dialog.dismiss();
+                                MODE++;
+                                upLoad();
+                            }
+                        }).create();
+                dialog.show();
+            }
+        } else if (MODE == 4) {
+            if (userName != null) {//避免重复输入
+                MODE++;
+                upLoad();
+            } else {
+                View view = getLayoutInflater().inflate(R.layout.half_dialog_view, null);
+                final EditText editText = (EditText) view.findViewById(R.id.dialog_edit);
+                AlertDialog dialog = new AlertDialog.Builder(this)
+                        .setTitle("输入用户名")//设置对话框的标题
+                        .setView(view)
+                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                userName = editText.getText().toString();
+                                dialog.dismiss();
+                                MODE++;
+                                upLoad();
+                            }
+                        }).create();
+                dialog.show();
+            }
         } else {
             postVideo();
         }
@@ -266,9 +293,8 @@ public class MainActivity extends AppCompatActivity {
                 .baseUrl("http://10.108.10.39:8080")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        // TODO: 2019/1/27 自定义
-        retrofit.create(IMiniDouyinService.class).createVideo("1120171227",
-                "zch",
+        retrofit.create(IMiniDouyinService.class).createVideo(studentId,
+                userName,
                 getMultipartFromUri("cover_image", mSelectedImage),
                 getMultipartFromUri("video", mSelectedVideo)).
                 enqueue(callback);
@@ -386,32 +412,28 @@ public class MainActivity extends AppCompatActivity {
                     if (grantResults.length > 0 && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                     } else {
                         gotPermissionLocate = false;
-                        Toast.makeText(this, "LOCATION 权限获取失败，请重试", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "定位权限获取失败，请重试", Toast.LENGTH_SHORT).show();
                         break;
                     }
                 }
                 if (gotPermissionLocate) {
                     getLocate();
-                } else {
-                    Toast.makeText(MainActivity.this, "权限获取失败，请重试", Toast.LENGTH_LONG).show();
                 }
                 break;
             }
-            case UPLOAD_REQUEST:{
+            case UPLOAD_REQUEST: {
                 int num = grantResults.length;
                 boolean gotPermissionUpload = true;
                 for (int i = 0; i < num; i++) {
                     if (grantResults.length > 0 && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                     } else {
                         gotPermissionUpload = false;
-                        Toast.makeText(this, "LOCATION 权限获取失败，请重试", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "文件权限获取失败，请重试", Toast.LENGTH_SHORT).show();
                         break;
                     }
                 }
                 if (gotPermissionUpload) {
                     upLoad();
-                } else {
-                    Toast.makeText(MainActivity.this, "权限获取失败，请重试", Toast.LENGTH_LONG).show();
                 }
                 break;
             }
@@ -440,7 +462,7 @@ public class MainActivity extends AppCompatActivity {
         getResponseFromMiniDouyin(new Callback<FeedResponse>() {
             @Override
             public void onResponse(Call<FeedResponse> call, Response<FeedResponse> response) {
-                Toast.makeText(MainActivity.this.getApplicationContext(), "REQUEST SUCCESS", Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this.getApplicationContext(), "视频刷新成功", Toast.LENGTH_LONG).show();
                 mFeeds = response.body().getFeeds();
                 recyclerView.getAdapter().notifyDataSetChanged();
                 btnRefreshEnable();
@@ -448,7 +470,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<FeedResponse> call, Throwable t) {
-                Toast.makeText(MainActivity.this.getApplicationContext(), "FAILED TO REQUEST" + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this.getApplicationContext(), "刷新失败，原因：\n" + t.getMessage(), Toast.LENGTH_LONG).show();
                 Log.d(TAG, "onFailure: " + t.getMessage());
                 btnRefreshEnable();
             }

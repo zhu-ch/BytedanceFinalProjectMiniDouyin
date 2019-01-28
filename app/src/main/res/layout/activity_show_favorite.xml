@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".ShowFavoriteActivity">
+    tools:context=".ShowFavoriteActivity"
+    android:paddingBottom="0dp">
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/rv_favorite"
@@ -14,28 +14,44 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal">
+        android:layout_height="wrap_content"
+        android:paddingBottom="5sp"
+        android:paddingTop="5sp"
+        android:paddingLeft="40dp"
+        android:paddingRight="40dp"
+        android:id="@+id/bottom"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="#000000">
 
-        <Button
+        <TextView
             android:id="@+id/btn_homepage"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Button" />
-
-        <Button
+            android:gravity="center"
+            android:text="首页"
+            android:textColor="#f2f2f2"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+        <ImageView
             android:id="@+id/btn_record_fav"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="0dp"
+            android:layout_height="35dp"
             android:layout_weight="1"
-            android:text="Button" />
+            android:src="@mipmap/picture" />
 
-        <Button
+        <TextView
             android:id="@+id/btn_post_fav"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Button" />
+            android:gravity="center"
+            android:text="发布"
+            android:textColor="#f2f2f2"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
     </LinearLayout>
-</LinearLayout>
+</RelativeLayout>

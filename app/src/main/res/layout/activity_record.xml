@@ -10,59 +10,105 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="20dp"
-        android:gravity="center">
+        android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/btn_picture"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textColor="#f2f2f2"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:text="picture" />
-
-        <TextView
-            android:id="@+id/btn_record"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textColor="#f2f2f2"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:text="record" />
-
-        <TextView
+        <ImageView
             android:id="@+id/btn_facing"
-            android:layout_width="0dp"
+            android:layout_width="40dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textColor="#f2f2f2"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:text="facing" />
+            android:src="@mipmap/change"
+            android:layout_marginRight="15dp"
+            android:layout_marginTop="5dp"
+            android:layout_alignParentTop="true"
+            android:tint="#f2f2f2"
+            android:layout_alignParentRight="true"/>
 
-        <TextView
-            android:id="@+id/btn_zoom"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textColor="#f2f2f2"
-            android:textSize="20sp"
-            android:textStyle="bold"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="10dp"
             android:gravity="center"
-            android:text="zoom" />
+            android:layout_marginLeft="40dp"
+            android:layout_marginRight="40dp">
 
-    </LinearLayout>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="55dp"
+                    android:id="@+id/btn_picture"
+                    android:src="@mipmap/photo"
+                    android:tint="#f2f2f2"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="10dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="拍照"
+                    android:textColor="#f2f2f2" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <ImageView
+                    android:id="@+id/btn_record"
+                    android:src="@mipmap/record"
+                    android:layout_width="wrap_content"
+                    android:layout_height="70dp"
+                    android:layout_gravity="center"
+                    android:tint="#f2f2f2"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="录像"
+                    android:textColor="#f2f2f2"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <ImageView
+                    android:id="@+id/btn_zoom"
+                    android:src="@mipmap/zoom"
+                    android:layout_width="wrap_content"
+                    android:layout_height="55dp"
+                    android:layout_gravity="center"
+                    android:tint="#f2f2f2"
+                    android:layout_marginTop="10dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="聚焦"
+                    android:textColor="#f2f2f2"/>
+            </LinearLayout>
 
 
+            <!--<TextView-->
+            <!--android:id="@+id/btn_facing"-->
+            <!--android:layout_width="0dp"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_weight="1"-->
+            <!--android:textColor="#f2f2f2"-->
+            <!--android:textSize="20sp"-->
+            <!--android:textStyle="bold"-->
+            <!--android:gravity="center"-->
+            <!--android:text="facing" />-->
+
+
+
+        </LinearLayout>
+    </RelativeLayout>
 </RelativeLayout>
