@@ -1,12 +1,10 @@
 package myself.zch.minidouyin;
 
 import android.Manifest;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.sqlite.SQLiteDatabase;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -37,8 +35,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import myself.zch.minidouyin.Database.FavoriteContract;
-import myself.zch.minidouyin.Database.FavoriteDbHelper;
 import myself.zch.minidouyin.JavaBeans.Feed;
 import myself.zch.minidouyin.JavaBeans.FeedResponse;
 import myself.zch.minidouyin.JavaBeans.PostVideoResponse;
@@ -67,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
     private Uri mSelectedVideo;
     private String studentId = null;
     private String userName = null;
+    private ImageView imageView;
 
     /*************************关于定位*****/
     String latLongString;

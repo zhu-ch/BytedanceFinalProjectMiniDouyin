@@ -16,10 +16,10 @@ public class StartActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
 
-        imageView = (ImageView)findViewById(R.id.image);
+        imageView = (ImageView) findViewById(R.id.image);
         imageView.setImageResource(R.mipmap.start);
-        AlphaAnimation animation =new  AlphaAnimation(0,1);
-        animation.setDuration(4000);
+        AlphaAnimation animation = new AlphaAnimation(0, 1);
+        animation.setDuration(2500);
         imageView.startAnimation(animation);
         animation.setAnimationListener(new Animation.AnimationListener() {
             @Override
@@ -29,8 +29,7 @@ public class StartActivity extends AppCompatActivity {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-
-                Intent intent = new Intent(StartActivity.this,MainActivity.class);
+                Intent intent = new Intent(StartActivity.this, MainActivity.class);
                 startActivity(intent);
                 StartActivity.this.finish();
             }

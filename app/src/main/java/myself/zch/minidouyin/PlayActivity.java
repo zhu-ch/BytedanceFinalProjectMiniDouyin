@@ -37,7 +37,6 @@ public class PlayActivity extends AppCompatActivity implements OnSeekBarChangeLi
     private TextView author_name;
     private SurfaceView mSurfaceView;
     private ProgressBar mProcessBar;
-    private TextView process_notice;
     FavoriteDbHelper mDbHelper;
     SQLiteDatabase db;
 
@@ -91,7 +90,6 @@ public class PlayActivity extends AppCompatActivity implements OnSeekBarChangeLi
             mSeekBar.getThumb().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
         }
         mProcessBar = (ProgressBar) findViewById(R.id.progressBar);
-        process_notice = (TextView) findViewById(R.id.progress_notice);
 
         mSurfaceView = (SurfaceView) findViewById(R.id.surfaceview);
         //SurfaceView帮助类对象
@@ -211,16 +209,10 @@ public class PlayActivity extends AppCompatActivity implements OnSeekBarChangeLi
         new Thread(new UpdateProgressRunnable()).start();
     }
 
-    /**
-     * 当播放完成时回调此方法
-     */
+
     @Override
     public void onCompletion(MediaPlayer mp) {
-        if (mMediapPlayer != null) {
-            currentState = STOPING;
-            process_notice.setText("重播");
-            process_notice.setVisibility(View.VISIBLE);
-        }
+
     }
 
     @Override
