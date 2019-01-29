@@ -113,7 +113,7 @@ public class PlayActivity extends AppCompatActivity implements OnSeekBarChangeLi
 
             if (db == null) {
                 Log.d(TAG, "db=null");
-                return false;
+                return true;
             }
 
             ContentValues values = new ContentValues();
