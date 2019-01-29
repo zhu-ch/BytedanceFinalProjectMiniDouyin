@@ -60,12 +60,15 @@
 
 ![](https://i.imgur.com/fu4mfJg.png)
 ![](https://i.imgur.com/b2yrw7Z.png)
+
 （in MainActivity）
 
 总结
+
 本项目综合运用了RecyclerView、Retrofit、数据库，Content Provider、多媒体等基本知识，完成了预期目标。
 
 说明
+
 详情可参阅Summary ppt\MiniDouyin项目总结.pptx
 
 
